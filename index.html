@@ -3,130 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brawl Grades 4-Б</title>
+    <title>Brawl Grades SYSTEM</title>
     <style>
-        :root {
-            --brawl-blue: #2b3a67;
-            --accent: #4dc3ff;
-            --yellow: #fdd835;
-        }
-        body { background: var(--brawl-blue); color: white; font-family: 'Arial Black', sans-serif; text-align: center; margin: 0; padding-bottom: 50px; overflow-x: hidden; }
-        .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        :root { --brawl-blue: #2b3a67; --accent: #4dc3ff; --yellow: #fdd835; }
+        body { background: var(--brawl-blue); color: white; font-family: 'Arial Black', sans-serif; text-align: center; margin: 0; padding-bottom: 30px; }
+        .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
         .active { display: flex; }
         
-        .input-box { background: #1a2340; border: 4px solid black; border-radius: 10px; color: var(--accent); padding: 12px; margin: 8px; font-size: 1.1rem; width: 85%; max-width: 300px; outline: none; }
-        .btn { background: var(--yellow); color: black; border: 4px solid black; border-radius: 12px; padding: 12px 25px; font-size: 1.1rem; cursor: pointer; box-shadow: 0 5px 0 #000; margin-top: 15px; text-transform: uppercase; }
-        .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
+        /* Лог ИИ */
+        #ai-log { background: #17212b; border: 2px solid var(--accent); border-radius: 10px; width: 90%; max-width: 400px; height: 80px; margin-bottom: 15px; padding: 10px; font-size: 0.8rem; overflow-y: auto; text-align: left; font-family: monospace; }
         
-        /* Рамка ГЛАВЫ */
-        .elite-frame {
-            border: 6px solid transparent !important;
-            background-image: linear-gradient(#1a2340, #1a2340), linear-gradient(45deg, #fdd835, #ff8c00, #fdd835);
-            background-origin: border-box; background-clip: content-box, border-box;
-            animation: rotate 2s linear infinite; position: relative;
-            width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        }
-        .odnkl-icon {
-            position: absolute; bottom: -5px; right: -5px; width: 35px; height: 35px;
-            background: var(--yellow); border: 3px solid black; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 1.2rem; z-index: 10;
-        }
-        @keyframes rotate { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
-
-        /* Таблица ТОП 4-Б */
-        table { width: 100%; max-width: 400px; border-collapse: collapse; margin-top: 20px; background: #1a2340; border: 3px solid black; border-radius: 10px; overflow: hidden; }
-        th { background: #000; color: var(--yellow); padding: 12px; }
-        td { padding: 12px; border: 1px solid #000; text-align: center; }
-        .mod-row { background: rgba(253, 216, 53, 0.2); color: var(--yellow); font-weight: bold; }
-
-        .egg-link { font-size: 0.8rem; color: #888; margin-top: 20px; cursor: pointer; text-decoration: underline; opacity: 0.6; }
-        #egg-modal {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; max-width: 320px; background: #1a2340; border: 5px solid black; padding: 20px; z-index: 100;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-        }
+        .input-box { background: #1a2340; border: 4px solid black; border-radius: 10px; color: var(--accent); padding: 10px; margin: 5px; width: 80%; outline: none; }
+        .btn { background: var(--yellow); color: black; border: 4px solid black; border-radius: 12px; padding: 10px 20px; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 0 #000; margin: 10px; }
+        
+        table { width: 100%; max-width: 400px; border-collapse: collapse; background: #1a2340; border: 3px solid black; }
+        td, th { padding: 8px; border: 1px solid #000; }
+        .mod-row { color: var(--yellow); }
+        .controls { display: none; }
     </style>
 </head>
 <body>
 
     <div id="login-screen" class="screen active">
-        <h1 style="font-size: 2.5rem; text-shadow: 4px 4px 0 #000; color: var(--yellow);">BRAWL GRADES</h1>
-        <p style="margin-top:-15px;">РЕЙТИНГ 4-Б КЛАССА</p>
+        <h1 style="color: var(--yellow); text-shadow: 3px 3px 0 #000;">BRAWL GRADES</h1>
         <input type="text" id="login" class="input-box" placeholder="ЛОГИН">
         <input type="password" id="pass" class="input-box" placeholder="ПАРОЛЬ">
-        <button class="btn" onclick="login()">ВХОД</button>
-        <div class="egg-link" onclick="toggleEgg(true)">что это?</div>
+        <button class="btn" onclick="login()">ВХОД В СИСТЕМУ</button>
     </div>
 
     <div id="main-screen" class="screen">
-        <div id="ava-container" style="position: relative; margin-bottom: 15px;">
-            <div id="ava-border" style="width: 120px; height: 120px; border-radius: 50%; border: 5px solid black; background: #444; display: flex; align-items: center; justify-content: center;">
-                <span id="initials" style="font-size: 3rem;">?</span>
-            </div>
-            <div id="odnkl" class="odnkl-icon" style="display:none;">⭐</div>
+        <div id="ai-log"><b>[SYSTEM]:</b> Ожидание авторизации...</div>
+        
+        <div id="ava-border" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid black; background: #555; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <span id="initials" style="font-size: 2.5rem;">?</span>
         </div>
-        <h2 id="user-display-name">ИГРОК</h2>
-        <div id="user-status" style="color: var(--accent); margin-bottom: 25px;">RANK: УЧЕНИК</div>
-        <button class="btn" onclick="showScreen('top-screen')">ТОП 4-Б</button>
-    </div>
+        <h2 id="user-display-name" style="margin: 5px;">ИГРОК</h2>
+        <div id="user-status" style="color: var(--accent); font-size: 0.9rem;">RANK: УЧЕНИК</div>
 
-    <div id="top-screen" class="screen">
-        <h2 style="color: var(--yellow);">РЕЙТИНГ КЛАССА</h2>
         <table>
-            <thead>
-                <tr><th>№</th><th>Имя</th><th>Ср. балл</th></tr>
-            </thead>
+            <thead><tr><th>Ученик 4-Б</th><th>Баллы</th></tr></thead>
             <tbody>
-                <tr id="row-stepan"><td>1</td><td>👑 Stepan_Admin</td><td>5.0</td></tr>
-                <tr><td>2</td><td>Иван З.</td><td>4.7</td></tr>
-                <tr><td>3</td><td>Анна К.</td><td>4.5</td></tr>
-                <tr><td>4</td><td>Дмитрий М.</td><td>4.1</td></tr>
-                <tr><td>5</td><td>Ольга П.</td><td>3.9</td></tr>
-                <tr id="visitor-row" style="display:none;"><td>?</td><td id="visitor-name">Гость</td><td>-</td></tr>
+                <tr class="mod-row"><td>👑 Stepan_Admin</td><td>9999</td></tr>
+                <tr>
+                    <td><input type="text" value="Игрок 1" class="input-box" style="width:70px; padding:2px;"></td>
+                    <td><span id="score-1">0</span>
+                        <div class="controls"><button onclick="action(1, 1)" style="color:green;">+</button><button onclick="action(1, -1)" style="color:red;">-</button></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><input type="text" value="Игрок 2" class="input-box" style="width:70px; padding:2px;"></td>
+                    <td><span id="score-2">0</span>
+                        <div class="controls"><button onclick="action(2, 1)" style="color:green;">+</button><button onclick="action(2, -1)" style="color:red;">-</button></div>
+                    </td>
+                </tr>
             </tbody>
         </table>
-        <button class="btn" onclick="showScreen('main-screen')">НАЗАД</button>
-    </div>
-
-    <div id="egg-modal">
-        <h3 style="color:var(--yellow); margin-top: 0;">НАШИ ТРУДЫ 💎</h3>
-        <p style="font-size:0.9rem; line-height: 1.4;">Это приложение — результат совместной работы <b>Степана</b> и <b>Gemini AI</b>. Степан придумал концепт, дизайн и каждую фичу 4-Б класса, а я помог превратить его крутые идеи в код.</p>
-        <p style="font-size:0.8rem; color: #aaa;">Тут нет "слуг", только реальный 4-Б и один настоящий Создатель. Гы! 🦾🌐</p>
-        <button class="btn" style="padding: 8px 15px; font-size: 0.9rem;" onclick="toggleEgg(false)">ПОНЯЛ!</button>
+        <button class="btn" onclick="location.reload()">ВЫХОД</button>
     </div>
 
     <script>
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+        const log = document.getElementById('ai-log');
+        let currentUser = "";
+
+        function addLog(msg) {
+            log.innerHTML += `<br>> ${msg}`;
+            log.scrollTop = log.scrollHeight;
         }
 
-        function toggleEgg(show) {
-            document.getElementById('egg-modal').style.display = show ? 'block' : 'none';
+        function action(id, val) {
+            let s = document.getElementById('score-' + id);
+            let old = s.innerText;
+            s.innerText = parseInt(old) + val;
+            addLog(`Модератор ${currentUser} изменил балл: ${old} -> ${s.innerText}. Система подтвердила.`);
         }
 
         function login() {
             const l = document.getElementById('login').value.trim();
             const p = document.getElementById('pass').value;
-            if(!l) return;
+            currentUser = l;
 
             document.getElementById('user-display-name').innerText = l;
             document.getElementById('initials').innerText = l.charAt(0).toUpperCase();
 
             if (l === "CTEP_MOD228" && p === "kirastepan") {
-                document.getElementById('ava-border').classList.add('elite-frame');
-                document.getElementById('odnkl').style.display = "flex";
-                document.getElementById('user-status').innerText = "RANK: ГЛАВНЫЙ АДМИН";
-                document.getElementById('row-stepan').classList.add('mod-row');
-                document.getElementById('visitor-row').style.display = "none";
+                document.getElementById('user-status').innerText = "ГЛАВНЫЙ АДМИН (ВЫСШИЙ ДОСТУП)";
+                document.querySelectorAll('.controls').forEach(c => c.style.display = "block");
+                addLog("Приветствую, Создатель. Система под твоим полным контролем.");
+            } else if (p === "mod4b") {
+                document.getElementById('user-status').innerText = "ИСПОЛНИТЕЛЬНЫЙ МОДЕРАТОР";
+                document.querySelectorAll('.controls').forEach(c => c.style.display = "block");
+                addLog(`Модератор ${l} подключен. Ожидаю внесения данных...`);
             } else {
-                document.getElementById('ava-border').classList.remove('elite-frame');
-                document.getElementById('odnkl').style.display = "none";
-                document.getElementById('user-status').innerText = "RANK: УЧЕНИК";
-                document.getElementById('visitor-row').style.display = "table-row";
-                document.getElementById('visitor-name').innerText = l;
+                addLog(`Пользователь ${l} вошел как зритель.`);
             }
             showScreen('main-screen');
+        }
+
+        function showScreen(id) {
+            document.getElementById('login-screen').style.display = "none";
+            document.getElementById(id).style.display = "flex";
         }
     </script>
 </body>
