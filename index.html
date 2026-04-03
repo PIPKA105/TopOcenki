@@ -3,105 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brawl Grades SYSTEM</title>
+    <title>Brawl Grades [OFFICIAL]</title>
     <style>
-        :root { --brawl-blue: #2b3a67; --accent: #4dc3ff; --yellow: #fdd835; }
-        body { background: var(--brawl-blue); color: white; font-family: 'Arial Black', sans-serif; text-align: center; margin: 0; padding-bottom: 30px; }
+        :root { --bg: #0e1621; --accent: #4dc3ff; --yellow: #fdd835; }
+        body { background: #17212b; color: white; font-family: 'Arial Black', sans-serif; text-align: center; margin: 0; }
         .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
         .active { display: flex; }
-        
-        /* Лог ИИ */
-        #ai-log { background: #17212b; border: 2px solid var(--accent); border-radius: 10px; width: 90%; max-width: 400px; height: 80px; margin-bottom: 15px; padding: 10px; font-size: 0.8rem; overflow-y: auto; text-align: left; font-family: monospace; }
-        
-        .input-box { background: #1a2340; border: 4px solid black; border-radius: 10px; color: var(--accent); padding: 10px; margin: 5px; width: 80%; outline: none; }
-        .btn { background: var(--yellow); color: black; border: 4px solid black; border-radius: 12px; padding: 10px 20px; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 0 #000; margin: 10px; }
-        
+        #ai-console { background: #000; border: 2px solid var(--accent); border-radius: 10px; width: 90%; max-width: 400px; height: 120px; margin-bottom: 15px; padding: 10px; font-size: 0.7rem; overflow-y: auto; text-align: left; color: #0f0; font-family: monospace; }
+        .input-box { background: #1a2340; border: 3px solid black; border-radius: 8px; color: white; padding: 10px; margin: 5px; width: 85%; outline: none; }
+        .btn { background: var(--yellow); color: black; border: 3px solid black; border-radius: 10px; padding: 12px 25px; cursor: pointer; font-weight: bold; margin: 10px; box-shadow: 0 4px 0 #000; }
         table { width: 100%; max-width: 400px; border-collapse: collapse; background: #1a2340; border: 3px solid black; }
-        td, th { padding: 8px; border: 1px solid #000; }
-        .mod-row { color: var(--yellow); }
-        .controls { display: none; }
+        td, th { padding: 10px; border: 1px solid #000; }
+        .online-dot { height: 10px; width: 10px; background-color: #28a745; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div id="login-screen" class="screen active">
         <h1 style="color: var(--yellow); text-shadow: 3px 3px 0 #000;">BRAWL GRADES</h1>
+        <p style="font-size: 0.7rem; letter-spacing: 2px;">SERVER 4-B ONLINE</p>
         <input type="text" id="login" class="input-box" placeholder="ЛОГИН">
         <input type="password" id="pass" class="input-box" placeholder="ПАРОЛЬ">
-        <button class="btn" onclick="login()">ВХОД В СИСТЕМУ</button>
+        <input type="text" id="code" class="input-box" placeholder="КОД ИЗ ТГК (55575)">
+        <button class="btn" onclick="auth()">VERIFY ACCESS</button>
     </div>
 
     <div id="main-screen" class="screen">
-        <div id="ai-log"><b>[SYSTEM]:</b> Ожидание авторизации...</div>
+        <div id="ai-console"><b>[AI_CORE]:</b> Ожидание авторизации...</div>
         
-        <div id="ava-border" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid black; background: #555; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-            <span id="initials" style="font-size: 2.5rem;">?</span>
+        <div style="margin-bottom: 10px;">
+            <span class="online-dot"></span> <small id="user-info">STATUS: OFFLINE</small>
         </div>
-        <h2 id="user-display-name" style="margin: 5px;">ИГРОК</h2>
-        <div id="user-status" style="color: var(--accent); font-size: 0.9rem;">RANK: УЧЕНИК</div>
+
+        <div id="signature-box" style="margin-bottom: 15px;"></div>
 
         <table>
-            <thead><tr><th>Ученик 4-Б</th><th>Баллы</th></tr></thead>
-            <tbody>
-                <tr class="mod-row"><td>👑 Stepan_Admin</td><td>9999</td></tr>
-                <tr>
-                    <td><input type="text" value="Игрок 1" class="input-box" style="width:70px; padding:2px;"></td>
-                    <td><span id="score-1">0</span>
-                        <div class="controls"><button onclick="action(1, 1)" style="color:green;">+</button><button onclick="action(1, -1)" style="color:red;">-</button></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td><input type="text" value="Игрок 2" class="input-box" style="width:70px; padding:2px;"></td>
-                    <td><span id="score-2">0</span>
-                        <div class="controls"><button onclick="action(2, 1)" style="color:green;">+</button><button onclick="action(2, -1)" style="color:red;">-</button></div>
-                    </td>
-                </tr>
-            </tbody>
+            <thead><tr><th>Ученик 4-Б</th><th>Балл</th><th>+/-</th></tr></thead>
+            <tbody id="students-list">
+                </tbody>
         </table>
-        <button class="btn" onclick="location.reload()">ВЫХОД</button>
+
+        <button class="btn" onclick="location.reload()" style="background: #444; color: white; margin-top: 20px;">ВЫЙТИ</button>
     </div>
 
     <script>
-        const log = document.getElementById('ai-log');
-        let currentUser = "";
+        // --- 1. РЕАЛЬНЫЙ СПИСОК 4-Б (БЕЗ ПРИМЕРОВ) ---
+        const students = [
+            { name: "👑 Stepan_Admin", score: 9999, id: 0 },
+            // Вписывай сюда своих: { name: "Имя Фамилия", score: 0, id: 1 },
+        ];
 
-        function addLog(msg) {
-            log.innerHTML += `<br>> ${msg}`;
-            log.scrollTop = log.scrollHeight;
+        // --- 2. БАЗА МОДЕРАТОРОВ (ЛИЧНЫЕ КОДЫ) ---
+        const staff = {
+            "Stepan": { pass: "kirastepan", code: "55575", role: "СОЗДАТЕЛЬ", sig: true },
+            // Пример: "Ivan": { pass: "ivan2016", code: "11111", role: "МОДЕР", sig: false }
+        };
+
+        let currentSession = null;
+        const consoleLog = document.getElementById('ai-console');
+
+        function log(msg) {
+            consoleLog.innerHTML += `<br>> ${msg}`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
         }
 
-        function action(id, val) {
-            let s = document.getElementById('score-' + id);
-            let old = s.innerText;
-            s.innerText = parseInt(old) + val;
-            addLog(`Модератор ${currentUser} изменил балл: ${old} -> ${s.innerText}. Система подтвердила.`);
-        }
-
-        function login() {
+        function auth() {
             const l = document.getElementById('login').value.trim();
             const p = document.getElementById('pass').value;
-            currentUser = l;
+            const c = document.getElementById('code').value;
 
-            document.getElementById('user-display-name').innerText = l;
-            document.getElementById('initials').innerText = l.charAt(0).toUpperCase();
-
-            if (l === "CTEP_MOD228" && p === "kirastepan") {
-                document.getElementById('user-status').innerText = "ГЛАВНЫЙ АДМИН (ВЫСШИЙ ДОСТУП)";
-                document.querySelectorAll('.controls').forEach(c => c.style.display = "block");
-                addLog("Приветствую, Создатель. Система под твоим полным контролем.");
-            } else if (p === "mod4b") {
-                document.getElementById('user-status').innerText = "ИСПОЛНИТЕЛЬНЫЙ МОДЕРАТОР";
-                document.querySelectorAll('.controls').forEach(c => c.style.display = "block");
-                addLog(`Модератор ${l} подключен. Ожидаю внесения данных...`);
+            if (staff[l] && staff[l].pass === p && staff[l].code === c) {
+                currentSession = staff[l];
+                currentSession.name = l;
+                startApp();
             } else {
-                addLog(`Пользователь ${l} вошел как зритель.`);
+                alert("ACCESS DENIED: Ошибка ключа или пароля!");
             }
-            showScreen('main-screen');
         }
 
-        function showScreen(id) {
+        function startApp() {
             document.getElementById('login-screen').style.display = "none";
-            document.getElementById(id).style.display = "flex";
+            document.getElementById('main-screen').style.display = "flex";
+            document.getElementById('user-info').innerText = `${currentSession.name} (${currentSession.role})`;
+            
+            log(`Синхронизация: ${currentSession.name}... Успешно.`);
+            log(`ИИ готов к обработке данных.`);
+            
+            if (currentSession.sig) {
+                document.getElementById('signature-box').innerHTML = `
+                    <img src="https://i.postimg.cc/mD8z4yRj/image.png" style="width:110px; border:2px solid gold; filter: drop-shadow(0 0 5px gold);">
+                    <p style="font-size:0.5rem; color:gold; margin-top:5px;">DIGITAL SIGNATURE VERIFIED</p>
+                `;
+            }
+            renderTable();
+        }
+
+        function renderTable() {
+            const list = document.getElementById('students-list');
+            list.innerHTML = "";
+            students.forEach(s => {
+                list.innerHTML += `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td id="s-${s.id}">${s.score}</td>
+                        <td>
+                            <button onclick="updateScore(${s.id}, 1)" style="color:green; background:none; border:1px solid green; padding:2px 8px; cursor:pointer;">+</button>
+                            <button onclick="updateScore(${s.id}, -1)" style="color:red; background:none; border:1px solid red; padding:2px 8px; cursor:pointer;">-</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateScore(id, val) {
+            const student = students.find(x => x.id === id);
+            const old = student.score;
+            student.score += val;
+            document.getElementById(`s-${id}`).innerText = student.score;
+            log(`[ИИ]: ${currentSession.name} применил ${val > 0 ? '+' : ''}${val} для ${student.name}.`);
         }
     </script>
 </body>
