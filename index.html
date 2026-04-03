@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brawl Grades ULTIMATE</title>
+    <style>
+        :root { --brawl-orange: #ff8a00; --brawl-yellow: #ffcc00; --brawl-blue: #0066ff; }
+        
+        body { 
+            background: linear-gradient(180deg, #0051ff 0%, #002266 100%);
+            color: white; font-family: 'Arial Black', sans-serif; text-align: center; margin: 0; 
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; padding: 15px; box-sizing: border-box; }
+        .active { display: flex; }
+
+        /* КОМАНДНАЯ СТРОКА СВЕРХУ */
+        #top-terminal {
+            width: 95%; max-width: 500px; background: rgba(0,0,0,0.8);
+            border: 3px solid var(--brawl-yellow); border-radius: 15px;
+            padding: 10px; font-family: monospace; color: #0f0; font-size: 0.8rem;
+            text-align: left; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        /* ТАБЛИЦА ЛИДЕРОВ (ТОП) */
+        .leaderboard {
+            width: 100%; max-width: 450px; background: rgba(0,0,0,0.3);
+            border-radius: 20px; border: 4px solid black; overflow: hidden;
+        }
+        .leaderboard-header { background: var(--brawl-orange); padding: 10px; font-size: 1.2rem; border-bottom: 4px solid black; }
+        
+        .player-row { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; border-bottom: 2px solid rgba(0,0,0,0.2); background: rgba(255,255,255,0.1);
+        }
+        .player-name { font-size: 1rem; }
+        .player-score { color: var(--brawl-yellow); font-size: 1.1rem; }
+
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .controls { display: flex; gap: 5px; }
+        .btn-plus { background: #28a745; color: white; border: 2px solid black; border-radius: 5px; padding: 5px 10px; cursor: pointer; }
+        .btn-minus { background: #dc3545; color: white; border: 2px solid black; border-radius: 5px; padding: 5px 10px; cursor: pointer; }
+
+        /* ФИКСИРОВАННЫЙ ВХОД */
+        .input-box { background: white; border: 4px solid black; border-radius: 10px; padding: 12px; margin: 5px; width: 80%; font-weight: bold; }
+        .login-btn { background: var(--brawl-yellow); color: black; border: 4px solid black; border-radius: 15px; padding: 15px 30px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 5px 0 #a38200; }
+
+        .sig-img { width: 100px; border: 3px solid var(--brawl-yellow); background: white; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="screen active">
+        <h1 style="font-size: 2.5rem; -webkit-text-stroke: 2px black;">BRAWL<br>GRADES</h1>
+        <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 20px; border: 4px solid black; width: 90%; max-width: 350px;">
+            <input type="text" id="login" class="input-box" placeholder="ЛОГИН">
+            <input type="password" id="pass" class="input-box" placeholder="ПАРОЛЬ">
+            <input type="password" id="code" class="input-box" placeholder="КОД ДОСТУПА">
+            <button class="login-btn" onclick="auth()">ИГРАТЬ</button>
+        </div>
+    </div>
+
+    <div id="main-screen" class="screen">
+        <div id="top-terminal">
+            <b>[SYSTEM_LOGS]:</b> Инициализация...<br>
+            > Ожидание команд модератора...
+        </div>
+
+        <div id="user-tag" style="background: black; padding: 5px 15px; border-radius: 10px; margin-bottom: 10px; font-size: 0.8rem;">
+            МОДЕРАТОР: <span id="user-name-display" style="color: var(--brawl-yellow);">?</span>
+        </div>
+
+        <div id="sig-area"></div>
+
+        <div class="leaderboard">
+            <div class="leaderboard-header">🏆 ТОП ИГРОКОВ 4-Б</div>
+            <div id="players-list">
+                </tbody>
+        </div>
+
+        <button onclick="location.reload()" style="background:none; border:none; color:white; text-decoration:underline; margin-top:20px; cursor:pointer;">ВЫЙТИ ИЗ СИСТЕМЫ</button>
+    </div>
+
+    <script>
+        // ТВОИ ДАННЫЕ (БЕЗ ПОДСКАЗОК В ПОЛЯХ)
+        const access = { login: "CTEP_MOD228", pass: "kirastepan", code: "54556" };
+
+        // СПИСОК УЧЕНИКОВ (Добавь сюда своих!)
+        const players = [
+            { name: "Stepan (Admin)", score: 9999, id: 0 },
+            { name: "Ученик 1", score: 0, id: 1 },
+            { name: "Ученик 2", score: 0, id: 2 }
+        ];
+
+        function auth() {
+            const l = document.getElementById('login').value.trim();
+            const p = document.getElementById('pass').value;
+            const c = document.getElementById('code').value.trim();
+
+            if (l === access.login && p === access.pass && c === access.code) {
+                document.getElementById('login-screen').style.display = "none";
+                document.getElementById('main-screen').style.display = "flex";
+                document.getElementById('user-name-display').innerText = l;
+                
+                // Ставим подпись
+                document.getElementById('sig-area').innerHTML = `
+                    <img src="https://i.postimg.cc/mD8z4yRj/image.png" class="sig-img">
+                    <p style="font-size:0.6rem; color: var(--brawl-yellow);">ВЕРИФИЦИРОВАНО ИИ</p>
+                `;
+                
+                updateLog("Доступ разрешен. Добро пожаловать, Степан.");
+                renderTable();
+            } else {
+                alert("ОШИБКА ДОСТУПА!");
+            }
+        }
+
+        function updateLog(text) {
+            const term = document.getElementById('top-terminal');
+            term.innerHTML = `<b>[SYSTEM_LOGS]:</b> ${text}<br>> Консоль активна.`;
+        }
+
+        function renderTable() {
+            const container = document.getElementById('players-list');
+            container.innerHTML = "";
+            players.forEach(p => {
+                container.innerHTML += `
+                    <div class="player-row">
+                        <div class="player-name">${p.name}</div>
+                        <div class="player-score" id="score-${p.id}">${p.score} 🏆</div>
+                        <div class="controls">
+                            <button class="btn-plus" onclick="changeScore(${p.id}, 1)">+</button>
+                            <button class="btn-minus" onclick="changeScore(${p.id}, -1)">-</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function changeScore(id, val) {
+            const player = players.find(x => x.id === id);
+            player.score += val;
+            document.getElementById(`score-${id}`).innerText = player.score + " 🏆";
+            updateLog(`Модератор изменил баллы игроку ${player.name} (${val > 0 ? '+' : ''}${val})`);
+        }
+    </script>
+</body>
+</html>
