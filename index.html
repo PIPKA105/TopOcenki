@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brawl Grades ULTIMATE</title>
+    <style>
+        body { background: #2b3a67; color: white; font-family: 'Arial Black', sans-serif; text-align: center; margin: 0; }
+        .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; }
+        .active { display: flex; }
+        .input-box { background: #1a2340; border: 4px solid black; border-radius: 10px; color: #4dc3ff; padding: 10px; margin: 5px; font-size: 1.2rem; width: 80%; }
+        .btn { background: #fdd835; color: black; border: 4px solid black; border-radius: 12px; padding: 12px 30px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 5px 0 #000; margin-top: 15px; }
+        
+        /* Тот самый ФЛЕКС */
+        .elite-frame {
+            border: 6px solid transparent !important;
+            background-image: linear-gradient(#1a2340, #1a2340), linear-gradient(45deg, #fdd835, #ff8c00, #fdd835);
+            background-origin: border-box; background-clip: content-box, border-box;
+            animation: rotate 2s linear infinite; position: relative;
+        }
+        .odnkl-icon {
+            position: absolute; bottom: -5px; right: -5px; width: 40px; height: 40px;
+            background: #fdd835; border: 3px solid black; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        @keyframes rotate { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        table { width: 90%; border-collapse: collapse; margin-top: 20px; background: #1a2340; border: 3px solid black; }
+        td { padding: 10px; border: 1px solid #000; }
+        .mod-row { color: #fdd835; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="screen active">
+        <h1 style="font-size: 2.5rem; text-shadow: 3px 3px 0 #000;">BRAWL GRADES</h1>
+        <input type="text" id="login" class="input-box" placeholder="ЛОГИН">
+        <input type="password" id="pass" class="input-box" placeholder="ПАРОЛЬ">
+        <button class="btn" onclick="login()">ВХОД</button>
+    </div>
+
+    <div id="main-screen" class="screen">
+        <div id="ava-border" style="width: 150px; height: 150px; border-radius: 50%; border: 5px solid black; background: #ccc; position: relative;">
+            <div id="odnkl" class="odnkl-icon" style="display:none;">⭐</div>
+        </div>
+        <h2 id="user-name">ИГРОК</h2>
+        <div id="status" style="color: #4dc3ff;">RANK: УЧЕНИК</div>
+        <button class="btn" onclick="showTop()">ПОКАЗАТЬ ТОП</button>
+    </div>
+
+    <div id="top-screen" class="screen">
+        <h2>TOP PLAYERS</h2>
+        <table>
+            <tr class="mod-row"><td>1</td><td>👑 Stepan_Admin</td><td>999</td></tr>
+            <tr class="mod-row"><td>2</td><td>🛠 VANKA_MOD228</td><td>500</td></tr>
+            <tr><td>3</td><td>🤖 Gemini_AI</td><td>43</td></tr>
+            <tr><td>4</td><td id="my-name">Ты</td><td id="my-score">0</td></tr>
+        </table>
+        <button class="btn" onclick="location.reload()">ВЫХОД</button>
+    </div>
+
+    <script>
+        function login() {
+            const l = document.getElementById('login').value;
+            const p = document.getElementById('pass').value;
+            
+            // Проверка на МОДА
+            if ((l === "CTEP_MOD228" && p === "kirastepan") || (l === "VANKA_MOD228" && p === "zczczc2")) {
+                document.getElementById('ava-border').classList.add('elite-frame');
+                document.getElementById('odnkl').style.display = "flex";
+                document.getElementById('status').innerText = "RANK: ЭЛИТНЫЙ МОДЕРАТОР";
+            }
+            
+            document.getElementById('user-name').innerText = l || "Игрок";
+            document.getElementById('my-name').innerText = l || "Игрок";
+            showScreen('main-screen');
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showTop() { showScreen('top-screen'); }
+    </script>
+</body>
+</html>
