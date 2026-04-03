@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brawl Grades [AI ANALYZER]</title>
+    <style>
+        :root { --brawl-blue: #0066ff; --brawl-yellow: #ffcc00; --brawl-red: #ff3333; --brawl-green: #28a745; }
+        body { 
+            background: #002266; color: white; font-family: 'Arial Black', sans-serif; 
+            text-align: center; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh;
+        }
+        .screen { display: none; width: 95%; max-width: 400px; flex-direction: column; background: rgba(0,0,0,0.85); border: 5px solid black; border-radius: 25px; padding: 20px; box-sizing: border-box; }
+        .active { display: flex; }
+
+        /* ОКНО ЧАТА ИИ */
+        .chat-box { background: #fff; color: #333; border-radius: 15px; padding: 15px; margin: 15px 0; text-align: left; font-family: sans-serif; border: 3px solid var(--brawl-yellow); line-height: 1.4; }
+        
+        /* КНОПКИ ПРОВЕРКИ */
+        .grid-btns { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
+        .btn { border: 3px solid black; border-radius: 15px; padding: 18px; font-weight: bold; cursor: pointer; font-family: 'Arial Black'; font-size: 1rem; box-shadow: 0 5px 0 rgba(0,0,0,0.3); }
+        .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+        
+        .btn-confirm { background: var(--brawl-green); color: white; }
+        .btn-ban { background: var(--brawl-red); color: white; }
+        
+        .status-tag { background: black; padding: 6px; border-radius: 10px; font-size: 0.7rem; color: var(--brawl-yellow); margin-bottom: 10px; letter-spacing: 1px; }
+        .ai-badge { background: #000; color: #0f0; padding: 2px 8px; border-radius: 5px; font-family: monospace; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="screen active">
+        <h1 style="font-size: 2rem; -webkit-text-stroke: 1px black;">BRAWL GRADES</h1>
+        <div class="status-tag">AI SYSTEMS ONLINE</div>
+        <input type="text" id="login" style="width:90%; padding:12px; margin:8px 0; border:3px solid black; border-radius:10px;" placeholder="ЛОГИН">
+        <input type="password" id="pass" style="width:90%; padding:12px; margin:8px 0; border:3px solid black; border-radius:10px;" placeholder="ПАРОЛЬ">
+        <input type="password" id="code" style="width:90%; padding:12px; margin:8px 0; border:3px solid black; border-radius:10px;" placeholder="КОД">
+        <button class="btn" onclick="auth()" style="background: var(--brawl-yellow); color: black; width: 100%; margin-top: 10px;">ЗАПУСК СИСТЕМЫ</button>
+    </div>
+
+    <div id="main-screen" class="screen">
+        <div class="status-tag">MODERATOR ID: <span id="user-display"></span></div>
+        <div style="font-size: 0.6rem; color: #0f0; margin-bottom: 10px;">РЕЙТИНГ МОДЕРАТОРА: <span id="mod-rank">100%</span></div>
+        
+        <div id="ai-message" class="chat-box">
+            <span class="ai-badge">AI ANALYZER v2.0</span><br><br>
+            <b>Анализ заявки...</b><br>
+            Ученик: <b id="student-name">Макс В.</b><br>
+            Оценка: <b>5 (Отлично)</b><br>
+            Расчет баллов: <b style="color: var(--brawl-green);">+10 БАЛЛОВ</b><br><br>
+            <i>Вердикт: Оценка выглядит подлинной. Подтверждаешь?</i>
+        </div>
+
+        <div id="action-buttons" class="grid-btns">
+            <button class="btn btn-confirm" onclick="processVerdict(false)">ВЕРНО (ЗАЧИСЛИТЬ +10)</button>
+            <button class="btn btn-ban" onclick="processVerdict(true)">ЛОЖЬ (БАН УЧЕНИКА)</button>
+        </div>
+    </div>
+
+    <script>
+        const students = ["Артем М.", "Лиза К.", "Никита С.", "Димон"];
+        let modPoints = 0;
+
+        function auth() {
+            const l = document.getElementById('login').value.trim();
+            const p = document.getElementById('pass').value;
+            const c = document.getElementById('code').value.trim();
+
+            if (l === "CTEP_MOD228" && p === "kirastepan" && c === "54556") {
+                document.getElementById('login-screen').classList.remove('active');
+                document.getElementById('main-screen').classList.add('active');
+                document.getElementById('user-display').innerText = l;
+            } else {
+                alert("ACCESS DENIED");
+            }
+        }
+
+        function processVerdict(isBan) {
+            const msg = document.getElementById('ai-message');
+            const btns = document.getElementById('action-buttons');
+            
+            btns.style.display = 'none';
+
+            if (isBan) {
+                msg.innerHTML = `<span class="ai-badge">AI ANALYZER</span><br><br><b style="color:red;">УЧЕНИК ЗАБАНЕН.</b><br>Система заблокировала доступ на 24 часа. Твой отчет принят.`;
+            } else {
+                msg.innerHTML = `<span class="ai-badge">AI ANALYZER</span><br><br><b style="color:green;">БАЛЛЫ ЗАЧИСЛЕНЫ.</b><br>Транзакция завершена. Ищу следующую заявку...`;
+            }
+
+            // Новая заявка через 3 секунды
+            setTimeout(() => {
+                const nextStudent = students[Math.floor(Math.random() * students.length)];
+                const randomGrade = Math.floor(Math.random() * (5 - 2 + 1)) + 2;
+                const points = randomGrade === 5 ? "+10" : randomGrade === 4 ? "+4" : randomGrade === 3 ? "-1" : "-4";
+                
+                msg.innerHTML = `
+                    <span class="ai-badge">AI ANALYZER v2.0</span><br><br>
+                    <b>Анализ заявки...</b><br>
+                    Ученик: <b>${nextStudent}</b><br>
+                    Оценка: <b>${randomGrade}</b><br>
+                    Расчет баллов: <b style="color: var(--brawl-green);">${points} БАЛЛОВ</b><br><br>
+                    <i>Вердикт: Ожидание подтверждения модератора...</i>
+                `;
+                btns.style.display = 'grid';
+                
+                // Обновляем "рейтинг" модератора (просто для красоты)
+                modPoints++;
+                document.getElementById('mod-rank').innerText = (100 + modPoints) + "%";
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
