@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>CTEP_DNS FIX</title>
+    <style>
+        body { background: #000; color: #ffcc00; font-family: 'Impact', sans-serif; text-align: center; padding-top: 50px; }
+        .btn { background: #ffcc00; color: #000; padding: 20px; border-radius: 15px; text-decoration: none; display: inline-block; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <h1>CTEP_DNS FIX</h1>
+    <p>Если была ошибка - попробуй эту версию:</p>
+    <a href="#" class="btn" onclick="install()">УСТАНОВИТЬ DNS</a>
+
+    <script>
+        function install() {
+            const dns = "176.99.11.77"; // Твой DNS для Xbox/BS
+            const config = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>DNSSettings</key>
+            <dict>
+                <key>DNSProtocol</key>
+                <string>UDP</string>
+                <key>ServerAddresses</key>
+                <array>
+                    <string>${dns}</string>
+                </array>
+            </dict>
+            <key>PayloadIdentifier</key>
+            <string>com.ctep.dns</string>
+            <key>PayloadType</key>
+            <string>com.apple.dnsSettings.managed</string>
+            <key>PayloadUUID</key>
+            <string>780D3D61-EF1C-4ED3-97C5-50391B5E8365</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+        </dict>
+    </array>
+    <key>PayloadDisplayName</key>
+    <string>CTEP_OG DNS</string>
+    <key>PayloadIdentifier</key>
+    <string>com.ctep.profile</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>8213CEDA-EF1C-4ED3-97C5-50391B5E8365</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>`;
+            const blob = new Blob([config], {type: 'application/x-apple-aspen-config'});
+            window.location.href = URL.createObjectURL(blob);
+        }
+    </script>
+</body>
+</html>
