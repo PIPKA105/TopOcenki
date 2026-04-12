@@ -1,0 +1,113 @@
+import UIKit
+import AVFoundation
+import Photos
+
+class ViewController: UIViewController {
+    var captureSession: AVCaptureSession?
+    var videoPreviewLayer: AVCaptureVideoPreviewLayer?
+    var captureDevice: AVCaptureDevice?
+    var label = UILabel()
+    // Тот самый предел мощи
+    let maxAIZoom: CGFloat = 1000.0 
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        setupCamera()
+        setupUI()
+    }
+
+    func setupCamera() {
+        captureSession = AVCaptureSession()
+        guard let device = AVCaptureDevice.default(for: .video) else { return }
+        captureDevice = device
+        do {
+            let input = try AVCaptureDeviceInput(device: device)
+            captureSession?.addInput(input)
+            videoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession!)
+            videoPreviewLayer?.videoGravity = .resizeAspectFill
+            videoPreviewLayer?.frame = view.layer.bounds
+            view.layer.addSublayer(videoPreviewLayer!)
+            captureSession?.startRunning()
+        } catch { print(error) }
+    }
+
+    func setupUI() {
+        // Ползунок мощи
+        let slider = UISlider(frame: CGRect(x: 50, y: view.frame.height - 150, width: view.frame.width - 100, height: 50))
+        slider.minimumValue = 1
+        slider.maximumValue = Float(maxAIZoom)
+        slider.addTarget(self, action: #selector(zoomChanged(_:)), for: .valueChanged)
+        view.addSubview(slider)
+        
+        // Информационное табло
+        label.frame = CGRect(x: 0, y: 50, width: view.frame.width, height: 40)
+        label.text = "STEPAN ZOOM v3.0: ИИ-Готов"
+        label.textColor = .green
+        label.textAlignment = .center
+        label.font = UIFont.boldSystemFont(ofSize: 18)
+        view.addSubview(label)
+
+        // КНОПКА СКАНИРОВАНИЯ (СОЗДАНИЯ ФОТО)
+        let photoButton = UIButton(frame: CGRect(x: (view.frame.width - 70) / 2, y: view.frame.height - 90, width: 70, height: 70))
+        photoButton.backgroundColor = .white
+        photoButton.layer.cornerRadius = 35
+        photoButton.layer.borderWidth = 5
+        photoButton.layer.borderColor = UIColor.gray.cgColor
+        photoButton.addTarget(self, action: #selector(takePhoto), for: .touchUpInside)
+        view.addSubview(photoButton)
+    }
+
+    @objc func zoomChanged(_ slider: UISlider) {
+        try? captureDevice?.lockForConfiguration()
+        let zoomFactor = CGFloat(slider.value)
+        captureDevice?.videoZoomFactor = zoomFactor
+        captureDevice?.unlockForConfiguration()
+        
+        // Магия ИИ: меняем надпись и "качество"
+        if zoomFactor > 50 {
+            label.text = "ЗУМ: \(Int(zoomFactor))x [ИИ-ОПТИМИЗАЦИЯ]"
+            label.textColor = .orange
+            // Эмуляция ИИ-резкости через Core Image
+            if let blur = videoPreviewLayer?.filters?.first(where: { ($0 as? CIFilter)?.name == "CISharpenLuminance" }) as? CIFilter {
+                blur.setValue(5.0, forKey: kCIInputSharpnessKey) // Усиливаем резкость
+            }
+        } else {
+            label.text = "ЗУМ: \(Int(zoomFactor))x"
+            label.textColor = .green
+        }
+    }
+
+    @objc func takePhoto() {
+        guard let captureSession = captureSession, captureSession.isRunning else { return }
+        
+        // Мигание экрана для эффекта
+        let flashView = UIView(frame: view.bounds)
+        flashView.backgroundColor = .white
+        view.addSubview(flashView)
+        UIView.animate(withDuration: 0.1, animations: { flashView.alpha = 0 }, completion: { _ in flashView.removeFromSuperview() })
+
+        // Магия сохранения (скриншот слоя камеры)
+        UIGraphicsBeginImageContextWithOptions(view.bounds.size, true, 0)
+        view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
+        if let image = UIGraphicsGetImageFromCurrentImageContext() {
+            PHPhotoLibrary.shared().performChanges({
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }) { (success, error) in
+                if success { print("Фото в галерее!") } else { print(error?.localizedDescription ?? "Ошибка") }
+            }
+        }
+        UIGraphicsEndImageContext()
+    }
+}
+
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    var window: UIWindow?
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        window = UIWindow(frame: UIScreen.main.bounds)
+        window?.rootViewController = ViewController()
+        window?.makeKeyAndVisible()
+        return true
+    }
+}
+UIApplicationMain(CommandLine.argc, CommandLine.unsafeArgv, nil, NSStringFromClass(AppDelegate.self))
