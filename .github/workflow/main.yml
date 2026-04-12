@@ -1,0 +1,111 @@
+name: Build Real Stepan Zoom
+on: [push]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Swift Code
+        run: |
+          cat <<EOF > main.swift
+          import UIKit
+          import AVFoundation
+
+          class ViewController: UIViewController {
+              var captureSession: AVCaptureSession?
+              var videoPreviewLayer: AVCaptureVideoPreviewLayer?
+              var captureDevice: AVCaptureDevice?
+
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  view.backgroundColor = .black
+                  setupCamera()
+                  setupUI()
+              }
+
+              func setupCamera() {
+                  captureSession = AVCaptureSession()
+                  guard let device = AVCaptureDevice.default(for: .video) else { return }
+                  captureDevice = device
+                  do {
+                      let input = try AVCaptureDeviceInput(device: device)
+                      captureSession?.addInput(input)
+                      videoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession!)
+                      videoPreviewLayer?.videoGravity = .resizeAspectFill
+                      videoPreviewLayer?.frame = view.layer.bounds
+                      view.layer.addSublayer(videoPreviewLayer!)
+                      captureSession?.startRunning()
+                  } catch { print(error) }
+              }
+
+              func setupUI() {
+                  let slider = UISlider(frame: CGRect(x: 50, y: view.frame.height - 100, width: view.frame.width - 100, height: 50))
+                  slider.minimumValue = 1
+                  slider.maximumValue = 100
+                  slider.addTarget(self, action: #selector(zoomChanged(_:)), for: .valueChanged)
+                  view.addSubview(slider)
+                  
+                  let label = UILabel(frame: CGRect(x: 0, y: 50, width: view.frame.width, height: 30))
+                  label.text = "STEPAN AI ZOOM 1000x"
+                  label.textColor = .green
+                  label.textAlignment = .center
+                  label.font = UIFont.boldSystemFont(ofSize: 20)
+                  view.addSubview(label)
+              }
+
+              @objc func zoomChanged(_ slider: UISlider) {
+                  try? captureDevice?.lockForConfiguration()
+                  captureDevice?.videoZoomFactor = CGFloat(slider.value)
+                  captureDevice?.unlockForConfiguration()
+              }
+          }
+
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  window = UIWindow(frame: UIScreen.main.bounds)
+                  window?.rootViewController = ViewController()
+                  window?.makeKeyAndVisible()
+                  return true
+              }
+          }
+          UIApplicationMain(CommandLine.argc, CommandLine.unsafeArgv, nil, NSStringFromClass(AppDelegate.self))
+          EOF
+
+          xcrun -sdk iphoneos swiftc main.swift -o StepanZoom -target arm64-apple-ios15.0
+          
+      - name: Create Package
+        run: |
+          mkdir -p Payload/StepanZoom.app
+          mv StepanZoom Payload/StepanZoom.app/
+          cat <<EOF > Payload/StepanZoom.app/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>StepanZoom</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.stepan.zoom1000x</string>
+              <key>CFBundleName</key>
+              <string>Stepan Zoom</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleShortVersionString</key>
+              <string>1.0</string>
+              <key>LSRequiresIPhoneOS</key>
+              <true/>
+              <key>NSCameraUsageDescription</key>
+              <string>Степан, разреши камеру для зума!</string>
+              <key>UILaunchStoryboardName</key>
+              <string>LaunchScreen</string>
+          </dict>
+          </plist>
+          EOF
+          zip -r StepanZoom.ipa Payload
+
+      - name: Upload Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: Real-Stepan-App
+          path: StepanZoom.ipa
