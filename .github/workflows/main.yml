@@ -1,0 +1,22 @@
+name: Build Stepan 1000x Zoom
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create App Structure
+        run: |
+          mkdir -p Payload/StepanZoom.app
+          # Копируем конфиг внутрь
+          cp Info.plist Payload/StepanZoom.app/Info.plist
+          # Создаем файл запуска (пустышку)
+          echo "AI_ZOOM_ACTIVE" > Payload/StepanZoom.app/StepanZoom
+          chmod +x Payload/StepanZoom.app/StepanZoom
+          # Пакуем в IPA
+          zip -r StepanZoom.ipa Payload
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stepan-1000x-App
+          path: StepanZoom.ipa
