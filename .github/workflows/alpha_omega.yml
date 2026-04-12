@@ -1,0 +1,82 @@
+name: Alpha_Omega_Build
+on: [push]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ultimate Build
+        run: |
+          # 1. Генерируем код
+          cat <<EOF > main.swift
+          import UIKit
+          import AVFoundation
+          @main
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+              func application(_ a: UIApplication, didFinishLaunchingWithOptions l: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  window = UIWindow(frame: UIScreen.main.bounds)
+                  window?.rootViewController = ZoomVC()
+                  window?.makeKeyAndVisible()
+                  return true
+              }
+          }
+          class ZoomVC: UIViewController {
+              let s = AVCaptureSession(); var d: AVCaptureDevice?
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  view.backgroundColor = .black
+                  guard let dev = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else { return }
+                  d = dev
+                  try? s.addInput(AVCaptureDeviceInput(device: dev))
+                  let p = AVCaptureVideoPreviewLayer(session: s)
+                  p.frame = view.bounds
+                  p.videoGravity = .resizeAspectFill
+                  view.layer.addSublayer(p)
+                  DispatchQueue.global().async { self.s.startRunning() }
+                  let sl = UISlider(frame: CGRect(x: 50, y: view.frame.height-100, width: view.frame.width-100, height: 50))
+                  sl.minimumValue = 1; sl.maximumValue = 100
+                  sl.addTarget(self, action: #selector(z), for: .valueChanged)
+                  view.addSubview(sl)
+              }
+              @objc func z(_ sl: UISlider) {
+                  try? d?.lockForConfiguration()
+                  d?.videoZoomFactor = CGFloat(sl.value)
+                  d?.unlockForConfiguration()
+              }
+          }
+          EOF
+
+          # 2. Компилируем (теперь с принудительным поиском библиотек)
+          xcrun swiftc -sdk $(xcrun --sdk iphoneos --show-sdk-path) \
+            -target arm64-apple-ios15.0 \
+            -framework UIKit -framework AVFoundation -framework Foundation \
+            main.swift -o AlphaOmegaExecutable
+          
+          # 3. Собираем пакет
+          mkdir -p Payload/AlphaOmega.app
+          mv AlphaOmegaExecutable Payload/AlphaOmega.app/AlphaOmega
+          
+          # 4. Создаем правильный Plist
+          printf '<?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key><string>AlphaOmega</string>
+            <key>CFBundleIdentifier</key><string>com.alpha.omega.zoom</string>
+            <key>CFBundleName</key><string>AlphaZoom</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>CFBundleShortVersionString</key><string>1.0</string>
+            <key>LSRequiresIPhoneOS</key><true/>
+            <key>NSCameraUsageDescription</key><string>Zoom 100x Alpha Access</string>
+          </dict>
+          </plist>' > Payload/AlphaOmega.app/Info.plist
+          
+          # 5. Финальный архив
+          zip -r AlphaZoom.ipa Payload
+
+      - name: Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: Alpha-Omega-IPA
+          path: AlphaZoom.ipa
