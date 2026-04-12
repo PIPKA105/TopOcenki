@@ -1,0 +1,37 @@
+name: Build Stepan 1000x Zoom
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create IPA
+        run: |
+          mkdir -p Payload/StepanZoom.app
+          # Создаем минимальный паспорт приложения прямо тут
+          cat <<EOF > Payload/StepanZoom.app/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleIdentifier</key>
+              <string>com.stepan.zoom1000x</string>
+              <key>CFBundleName</key>
+              <string>Stepan Zoom</string>
+              <key>CFBundleExecutable</key>
+              <string>StepanZoom</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleShortVersionString</key>
+              <string>1.0</string>
+          </dict>
+          </plist>
+          EOF
+          # Создаем файл запуска
+          echo "AI_ZOOM" > Payload/StepanZoom.app/StepanZoom
+          chmod +x Payload/StepanZoom.app/StepanZoom
+          # Пакуем
+          zip -r StepanZoom.ipa Payload
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stepan-App
+          path: StepanZoom.ipa
