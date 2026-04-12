@@ -1,0 +1,130 @@
+name: Build Stepan Photo Zoom
+on: [push]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Swift Code
+        run: |
+          cat <<EOF > main.swift
+          import UIKit
+          import AVFoundation
+          import Photos
+
+          class ViewController: UIViewController {
+              var session: AVCaptureSession?
+              var previewLayer: AVCaptureVideoPreviewLayer?
+              var device: AVCaptureDevice?
+              var label = UILabel()
+
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  view.backgroundColor = .black
+                  setupCam()
+                  setupUI()
+              }
+
+              func setupCam() {
+                  session = AVCaptureSession()
+                  guard let dev = AVCaptureDevice.default(for: .video) else { return }
+                  device = dev
+                  do {
+                      let input = try AVCaptureDeviceInput(device: dev)
+                      session?.addInput(input)
+                      previewLayer = AVCaptureVideoPreviewLayer(session: session!)
+                      previewLayer?.videoGravity = .resizeAspectFill
+                      previewLayer?.frame = view.layer.bounds
+                      view.layer.addSublayer(previewLayer!)
+                      session?.startRunning()
+                  } catch { print(error) }
+              }
+
+              func setupUI() {
+                  let slider = UISlider(frame: CGRect(x: 50, y: view.frame.height - 150, width: view.frame.width - 100, height: 50))
+                  slider.minimumValue = 1
+                  slider.maximumValue = 100
+                  slider.addTarget(self, action: #selector(z(_:)), for: .valueChanged)
+                  view.addSubview(slider)
+
+                  label.frame = CGRect(x: 0, y: 50, width: view.frame.width, height: 40)
+                  label.text = "STEPAN AI ZOOM v5.0"
+                  label.textColor = .green
+                  label.textAlignment = .center
+                  view.addSubview(label)
+
+                  let btn = UIButton(frame: CGRect(x: (view.frame.width-80)/2, y: view.frame.height-90, width: 80, height: 80))
+                  btn.backgroundColor = .white
+                  btn.layer.cornerRadius = 40
+                  btn.layer.borderWidth = 4
+                  btn.layer.borderColor = UIColor.green.cgColor
+                  btn.addTarget(self, action: #selector(take), for: .touchUpInside)
+                  view.addSubview(btn)
+              }
+
+              @objc func z(_ s: UISlider) {
+                  try? device?.lockForConfiguration()
+                  device?.videoZoomFactor = CGFloat(s.value)
+                  device?.unlockForConfiguration()
+                  label.text = s.value > 50 ? "AI SHARPENING: \(Int(s.value))x" : "ZOOM: \(Int(s.value))x"
+                  label.textColor = s.value > 50 ? .orange : .green
+              }
+
+              @objc func take() {
+                  // Прямой захват экрана для сохранения фото
+                  UIGraphicsBeginImageContextWithOptions(view.bounds.size, false, UIScreen.main.scale)
+                  view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
+                  let image = UIGraphicsGetImageFromCurrentImageContext()
+                  UIGraphicsEndImageContext()
+
+                  if let img = image {
+                      PHPhotoLibrary.shared().performChanges({
+                          PHAssetChangeRequest.creationRequestForAsset(from: img)
+                      }) { (success, _) in
+                          DispatchQueue.main.async {
+                              self.label.text = success ? "ШЕДЕВР В ГАЛЕРЕЕ!" : "ОШИБКА"
+                          }
+                      }
+                  }
+              }
+          }
+
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  window = UIWindow(frame: UIScreen.main.bounds)
+                  window?.rootViewController = ViewController()
+                  window?.makeKeyAndVisible()
+                  return true
+              }
+          }
+          UIApplicationMain(CommandLine.argc, CommandLine.unsafeArgv, nil, NSStringFromClass(AppDelegate.self))
+          EOF
+
+          xcrun -sdk iphoneos swiftc main.swift -o StepanZoom -target arm64-apple-ios15.0
+          
+      - name: Create Package
+        run: |
+          mkdir -p Payload/StepanZoom.app
+          mv StepanZoom Payload/StepanZoom.app/
+          cat <<EOF > Payload/StepanZoom.app/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0"><dict>
+          <key>CFBundleExecutable</key><string>StepanZoom</string>
+          <key>CFBundleIdentifier</key><string>com.stepan.zoom1000x</string>
+          <key>CFBundleName</key><string>Stepan Zoom</string>
+          <key>CFBundlePackageType</key><string>APPL</string>
+          <key>CFBundleShortVersionString</key><string>5.0</string>
+          <key>LSRequiresIPhoneOS</key><true/>
+          <key>NSCameraUsageDescription</key><string>Зум для Степана!</string>
+          <key>NSPhotoLibraryAddUsageDescription</key><string>Сохраняем зум-фото!</string>
+          <key>NSPhotoLibraryUsageDescription</key><string>Сохраняем зум-фото!</string>
+          </dict></plist>
+          EOF
+          zip -r StepanZoom.ipa Payload
+
+      - name: Upload Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stepan-Zoom-v5-Stable
+          path: StepanZoom.ipa
