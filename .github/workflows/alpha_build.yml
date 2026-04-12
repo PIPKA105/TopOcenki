@@ -1,0 +1,61 @@
+name: Alpha_Zoom_100x
+on: [push]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          cat <<EOF > main.swift
+          import UIKit
+          import AVFoundation
+
+          @main
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+              func application(_ a: UIApplication, didFinishLaunchingWithOptions l: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  window = UIWindow(frame: UIScreen.main.bounds)
+                  window?.rootViewController = AlphaVC()
+                  window?.makeKeyAndVisible()
+                  return true
+              }
+          }
+
+          class AlphaVC: UIViewController {
+              let s = AVCaptureSession()
+              var d: AVCaptureDevice?
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  view.backgroundColor = .black
+                  guard let dev = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else { return }
+                  d = dev
+                  try? s.addInput(AVCaptureDeviceInput(device: dev))
+                  let p = AVCaptureVideoPreviewLayer(session: s)
+                  p.frame = view.bounds
+                  p.videoGravity = .resizeAspectFill
+                  view.layer.addSublayer(p)
+                  DispatchQueue.global().async { self.s.startRunning() }
+                  
+                  let slider = UISlider(frame: CGRect(x: 50, y: view.frame.height - 100, width: view.frame.width - 100, height: 50))
+                  slider.minimumValue = 1; slider.maximumValue = 100
+                  slider.addTarget(self, action: #selector(z), for: .valueChanged)
+                  view.addSubview(slider)
+              }
+              @objc func z(_ sl: UISlider) {
+                  try? d?.lockForConfiguration()
+                  d?.videoZoomFactor = CGFloat(sl.value)
+                  d?.unlockForConfiguration()
+              }
+          }
+          EOF
+          xcrun -sdk iphoneos swiftc main.swift -o AlphaZoom -target arm64-apple-ios15.0 -framework UIKit -framework AVFoundation
+          mkdir -p Payload/AlphaZoom.app
+          mv AlphaZoom Payload/AlphaZoom.app/
+          echo '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>CFBundleExecutable</key><string>AlphaZoom</string><key>CFBundleIdentifier</key><string>com.alpha.zoom</string><key>CFBundleName</key><string>Alpha Zoom</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.0</string><key>LSRequiresIPhoneOS</key><true/><key>NSCameraUsageDescription</key><string>Zoom</string></dict></plist>' > Payload/AlphaZoom.app/Info.plist
+          zip -r AlphaZoom.ipa Payload
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Alpha-IPA
+          path: AlphaZoom.ipa
