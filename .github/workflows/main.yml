@@ -1,0 +1,115 @@
+name: Stepan_Zoom_V10
+on: [push]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build App
+        run: |
+          cat <<EOF > main.swift
+          import UIKit
+          import AVFoundation
+          import Photos
+
+          @main
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  window = UIWindow(frame: UIScreen.main.bounds)
+                  window?.rootViewController = ZoomVC()
+                  window?.makeKeyAndVisible()
+                  return true
+              }
+          }
+
+          class ZoomVC: UIViewController, AVCapturePhotoCaptureDelegate {
+              let session = AVCaptureSession()
+              var output = AVCapturePhotoOutput()
+              var device: AVCaptureDevice?
+              let label = UILabel()
+
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  view.backgroundColor = .black
+                  setupCamera()
+                  setupUI()
+              }
+
+              func setupCamera() {
+                  guard let dev = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else { return }
+                  self.device = dev
+                  do {
+                      let input = try AVCaptureDeviceInput(device: dev)
+                      if session.canAddInput(input) { session.addInput(input) }
+                      if session.canAddOutput(output) { session.addOutput(output) }
+                      let layer = AVCaptureVideoPreviewLayer(session: session)
+                      layer.frame = view.bounds
+                      layer.videoGravity = .resizeAspectFill
+                      view.layer.addSublayer(layer)
+                      DispatchQueue.global(qos: .userInitiated).async { self.session.startRunning() }
+                  } catch { print(error) }
+              }
+
+              func setupUI() {
+                  let slider = UISlider(frame: CGRect(x: 40, y: view.frame.height-140, width: view.frame.width-80, height: 40))
+                  slider.minimumValue = 1; slider.maximumValue = 100
+                  slider.addTarget(self, action: #selector(z), for: .valueChanged)
+                  view.addSubview(slider)
+
+                  label.frame = CGRect(x: 0, y: 60, width: view.frame.width, height: 40)
+                  label.text = "STEPAN AI ZOOM v10"; label.textColor = .green; label.textAlignment = .center
+                  view.addSubview(label)
+
+                  let btn = UIButton(frame: CGRect(x: (view.frame.width-80)/2, y: view.frame.height-90, width: 80, height: 80))
+                  btn.backgroundColor = .white; btn.layer.cornerRadius = 40
+                  btn.addTarget(self, action: #selector(take), for: .touchUpInside)
+                  view.addSubview(btn)
+              }
+
+              @objc func z(_ s: UISlider) {
+                  try? device?.lockForConfiguration()
+                  device?.videoZoomFactor = CGFloat(s.value)
+                  device?.unlockForConfiguration()
+                  label.text = "ZOOM: \(Int(s.value))x"
+              }
+
+              @objc func take() {
+                  output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
+              }
+
+              func photoOutput(_ o: AVCapturePhotoOutput, didFinishProcessingPhoto p: AVCapturePhoto, error: Error?) {
+                  guard let d = p.fileDataRepresentation(), let i = UIImage(data: d) else { return }
+                  PHPhotoLibrary.shared().performChanges({ PHAssetChangeRequest.creationRequestForAsset(from: i) })
+              }
+          }
+          EOF
+          
+          # Компиляция с явным указанием SDK
+          xcrun -sdk iphoneos swiftc main.swift -o StepanZoom -target arm64-apple-ios15.0 -framework UIKit -framework AVFoundation -framework Photos
+          
+          mkdir -p Payload/StepanZoom.app
+          mv StepanZoom Payload/StepanZoom.app/
+          
+          cat <<EOF > Payload/StepanZoom.app/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0"><dict>
+          <key>CFBundleExecutable</key><string>StepanZoom</string>
+          <key>CFBundleIdentifier</key><string>com.stepan.zoom.v10</string>
+          <key>CFBundleName</key><string>Stepan Zoom</string>
+          <key>CFBundlePackageType</key><string>APPL</string>
+          <key>CFBundleShortVersionString</key><string>10.0</string>
+          <key>LSRequiresIPhoneOS</key><true/>
+          <key>NSCameraUsageDescription</key><string>Zoom AI</string>
+          <key>NSPhotoLibraryUsageDescription</key><string>Save AI Photo</string>
+          </dict></plist>
+          EOF
+          zip -r StepanZoom.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zoom-v10
+          path: StepanZoom.ipa
