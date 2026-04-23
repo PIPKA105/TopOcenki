@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ромашка VPN</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="romashka.png">
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 100vh; margin: 0; }
+        img { width: 200px; margin-bottom: 20px; }
+        button { background: #333; color: #fff; border: none; padding: 20px 40px; font-size: 20px; border-radius: 15px; cursor: pointer; }
+        .active { background: #00ff00; color: #000; }
+        .error { background: #ff0000; }
+    </style>
+</head>
+<body>
+    <img src="romashka.png" alt="Ромашка">
+    <button id="btn" onclick="toggle()">ПОДКЛЮЧИТЬСЯ</button>
+
+    <script>
+        function toggle() {
+            let btn = document.getElementById('btn');
+            if (btn.innerText === "ПОДКЛЮЧИТЬСЯ") {
+                btn.innerText = "ПОДКЛЮЧЕНО";
+                btn.className = "active";
+            } else {
+                btn.innerText = "ПОДКЛЮЧИТЬСЯ";
+                btn.className = "";
+            }
+        }
+    </script>
+</body>
+</html>
