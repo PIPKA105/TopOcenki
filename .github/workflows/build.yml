@@ -1,0 +1,29 @@
+name: Romashka IPA Packer
+on: [workflow_dispatch, push]
+
+jobs:
+  make-ipa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare Payload
+        run: |
+          # Создаем структуру как у настоящего приложения
+          mkdir -p Payload/Romashka.app
+          cp main.py Payload/Romashka.app/
+          cp romashka.png Payload/Romashka.app/
+          # Иконка для iOS (просто копируем твою)
+          cp romashka.png Payload/Romashka.app/Info.plist || touch Payload/Romashka.app/Info.plist
+
+      - name: Create IPA
+        run: |
+          # Пакуем папку Payload в ZIP, но называем его IPA
+          zip -r RomashkaVPN.ipa Payload/
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Romashka_Final_IPA
+          path: RomashkaVPN.ipa
